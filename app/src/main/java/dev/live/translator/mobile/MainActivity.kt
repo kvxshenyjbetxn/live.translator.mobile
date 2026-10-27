@@ -71,6 +71,7 @@ class MainActivity : Activity() {
     private var servicePhase = SessionPhase.IDLE
     private var projectionRequestCode = REQUEST_PROJECTION_BASE
     private val bound = AtomicBoolean(false)
+    private var notificationPermissionAsked = false
 
     private val serviceConnection = object : ServiceConnection {
         override fun onServiceConnected(name: ComponentName?, binder: IBinder?) {
@@ -298,10 +299,17 @@ class MainActivity : Activity() {
             return
         }
         projectionRequestCode = REQUEST_PROJECTION_BASE + (request.generation % 1000).toInt()
-        if (checkSelfPermission(Manifest.permission.RECORD_AUDIO) != PackageManager.PERMISSION_GRANTED) {
-            requestPermissions(arrayOf(Manifest.permission.RECORD_AUDIO), REQUEST_AUDIO)
+        val missing = runtimePermissions().filter { checkSelfPermission(it) != PackageManager.PERMISSION_GRANTED }
+        if (Manifest.permission.RECORD_AUDIO in missing || (missing.isNotEmpty() && !notificationPermissionAsked)) {
+            notificationPermissionAsked = true
+            requestPermissions(missing.toTypedArray(), REQUEST_AUDIO)
         } else requestProjection()
     }
+
+    // Notifications are optional: without them the session still runs, the user just loses the status and stop shortcut.
+    private fun runtimePermissions(): List<String> =
+        listOf(Manifest.permission.RECORD_AUDIO) +
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) listOf(Manifest.permission.POST_NOTIFICATIONS) else emptyList()
 
     private fun requestProjection() {
         if (consentGate.current() == null) return
@@ -314,7 +322,8 @@ class MainActivity : Activity() {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults)
         if (requestCode == REQUEST_AUDIO) {
             if (consentGate.current() == null) return
-            if (grantResults.firstOrNull() == PackageManager.PERMISSION_GRANTED) requestProjection()
+            val audioGranted = checkSelfPermission(Manifest.permission.RECORD_AUDIO) == PackageManager.PERMISSION_GRANTED
+            if (audioGranted) requestProjection()
             else {
                 consentGate.invalidate()
                 status.text = "Потрібен дозвіл на аудіо для захоплення вибраної програми."

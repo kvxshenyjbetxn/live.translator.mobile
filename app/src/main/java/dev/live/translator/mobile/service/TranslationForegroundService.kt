@@ -11,11 +11,13 @@ import android.content.pm.PackageManager
 import android.content.pm.ServiceInfo
 import android.media.projection.MediaProjection
 import android.media.projection.MediaProjectionManager
+import android.net.wifi.WifiManager
 import android.os.Binder
 import android.os.Build
 import android.os.Handler
 import android.os.IBinder
 import android.os.Looper
+import android.os.PowerManager
 import dev.live.translator.mobile.MainActivity
 import dev.live.translator.mobile.audio.PlaybackCaptureReader
 import dev.live.translator.mobile.audio.TranslatedAudioPlayer
@@ -63,6 +65,9 @@ class TranslationForegroundService : Service() {
     private var session: LiveSession? = null
     private var trace: SessionTrace? = null
     private var transport: GeminiLiveTransport = GeminiWebSocketTransport()
+    private var targetLanguage = Languages.normalize(null)
+    private var wakeLock: PowerManager.WakeLock? = null
+    private var wifiLock: WifiManager.WifiLock? = null
 
     override fun onCreate() {
         super.onCreate()
@@ -108,14 +113,16 @@ class TranslationForegroundService : Service() {
             val sessionTrace = SessionTrace()
             trace = sessionTrace
             sessionTrace.event(SessionEvent.START_REQUESTED)
+            this.targetLanguage = targetLanguage
             state = SessionState(SessionPhase.STARTING, "Підготовка перекладу…")
             notifyState()
             var projection: MediaProjection? = null
             try {
-                val notification = buildNotification("Переклад активний")
+                val notification = buildNotification("Підключення до Gemini…")
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
                     startForeground(NOTIFICATION_ID, notification, ServiceInfo.FOREGROUND_SERVICE_TYPE_MEDIA_PROJECTION)
                 } else startForeground(NOTIFICATION_ID, notification)
+                acquireLocks()
                 projection = (getSystemService(MEDIA_PROJECTION_SERVICE) as MediaProjectionManager)
                     .getMediaProjection(resultCode, projectionData)
                     ?: throw IllegalStateException("Система не надала MediaProjection")
@@ -186,6 +193,7 @@ class TranslationForegroundService : Service() {
                     if (wasCurrent && !wasCancelled && !destroyed) {
                         state = SessionState(SessionPhase.ERROR, failureMessage(failure))
                         notifyState()
+                        releaseLocks()
                         stopForeground(STOP_FOREGROUND_REMOVE)
                         stopSelf()
                     }
@@ -226,6 +234,7 @@ class TranslationForegroundService : Service() {
             it.reader.stop()
             it.player.stopAndRelease()
         }
+        releaseLocks()
         stopForeground(STOP_FOREGROUND_REMOVE)
         stopSelf()
         synchronized(lifecycleLock) {
@@ -240,6 +249,7 @@ class TranslationForegroundService : Service() {
             state = SessionState(SessionPhase.ERROR, message)
             notifyState()
         }
+        releaseLocks()
         stopForeground(STOP_FOREGROUND_REMOVE)
         stopSelf()
     }
@@ -266,12 +276,37 @@ class TranslationForegroundService : Service() {
             it.reader.stop()
             it.player.stopAndRelease()
         }
+        releaseLocks()
         super.onDestroy()
     }
 
     private fun notifyState() {
         val snapshot = state
+        // Only phases that hold the foreground notification may refresh it; reposting later would leave a stale ongoing entry.
+        if (snapshot.phase == SessionPhase.RUNNING) {
+            getSystemService(NotificationManager::class.java)
+                .notify(NOTIFICATION_ID, buildNotification("Переклад працює → ${Languages.nameOf(targetLanguage)}"))
+        }
         mainHandler.post { listener?.invoke(snapshot) }
+    }
+
+    // Keeps the CPU and Wi-Fi radio awake while the screen is off so audio streaming does not stall or gain latency.
+    @Suppress("DEPRECATION")
+    private fun acquireLocks() {
+        releaseLocks()
+        wakeLock = getSystemService(PowerManager::class.java)
+            .newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "LiveTranslator:session")
+            .apply { setReferenceCounted(false); acquire(MAX_LOCK_MS) }
+        wifiLock = applicationContext.getSystemService(WifiManager::class.java)
+            ?.createWifiLock(WifiManager.WIFI_MODE_FULL_HIGH_PERF, "LiveTranslator:session")
+            ?.apply { setReferenceCounted(false); acquire() }
+    }
+
+    private fun releaseLocks() = synchronized(lifecycleLock) {
+        try { wakeLock?.takeIf { it.isHeld }?.release() } catch (_: Exception) { }
+        try { wifiLock?.takeIf { it.isHeld }?.release() } catch (_: Exception) { }
+        wakeLock = null
+        wifiLock = null
     }
 
     private fun failureMessage(failure: Exception): String = when (failure) {
@@ -329,5 +364,6 @@ class TranslationForegroundService : Service() {
         private const val CHANNEL_ID = "live_translator"
         private const val NOTIFICATION_ID = 1001
         private const val RESULT_OK = -1
+        private const val MAX_LOCK_MS = 4 * 60 * 60 * 1000L
     }
 }
