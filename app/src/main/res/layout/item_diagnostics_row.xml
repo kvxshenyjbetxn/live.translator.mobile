@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android" android:layout_width="match_parent" android:layout_height="wrap_content" android:gravity="center_vertical" android:minHeight="76dp" android:orientation="horizontal">
     <LinearLayout android:layout_width="108dp" android:layout_height="wrap_content" android:orientation="vertical" android:paddingEnd="6dp">
-        <TextView android:id="@+id/diagTitle" android:layout_width="match_parent" android:layout_height="wrap_content" android:textColor="@color/text" android:textSize="14sp" android:textStyle="bold" />
-        <TextView android:id="@+id/diagSubtitle" android:layout_width="match_parent" android:layout_height="wrap_content" android:textColor="@color/muted" android:textSize="11sp" android:visibility="gone" />
-        <TextView android:id="@+id/diagScale" android:layout_width="match_parent" android:layout_height="wrap_content" android:textColor="@color/muted" android:textSize="11sp" />
+        <TextView android:id="@+id/diagTitle" android:layout_width="match_parent" android:layout_height="wrap_content" android:textColor="?attr/ltText" android:textSize="14sp" android:textStyle="bold" />
+        <TextView android:id="@+id/diagSubtitle" android:layout_width="match_parent" android:layout_height="wrap_content" android:textColor="?attr/ltMuted" android:textSize="11sp" android:visibility="gone" />
+        <TextView android:id="@+id/diagScale" android:layout_width="match_parent" android:layout_height="wrap_content" android:textColor="?attr/ltMuted" android:textSize="11sp" />
     </LinearLayout>
     <dev.live.translator.mobile.ui.DiagnosticsChartView android:id="@+id/diagChart" android:layout_width="0dp" android:layout_height="56dp" android:layout_weight="1" />
     <TextView android:id="@+id/diagValue" android:layout_width="72dp" android:layout_height="wrap_content" android:gravity="end" android:paddingStart="4dp" android:textSize="13sp" android:textStyle="bold" />

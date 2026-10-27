@@ -26,4 +26,20 @@
     <string name="diag_axis_end">зараз</string>
     <string name="diag_note_https">HTTPS-запит до сервера Google — відгук з’єднання, не час перекладу. Кожен стовпчик — фактичне вимірювання приблизно раз на 4 с.</string>
     <string name="diag_note_video">Ці показники не вимірюють точне відставання від відео.</string>
+    <string name="back">Назад</string>
+    <string name="settings_eyebrow">ВАШ ПРОСТІР</string>
+    <string name="settings_autosave_note">Зміни зберігаються автоматично.</string>
+    <string name="connection_title">Підключення до Google</string>
+    <string name="connection_desc">Ключ Gemini API потрібен для живого перекладу.</string>
+    <string name="remove_key">Видалити ключ</string>
+    <string name="sound_title">Звук перекладу</string>
+    <string name="sound_desc">Гучність озвученого перекладу відносно оригіналу.</string>
+    <string name="appearance_title">Вигляд</string>
+    <string name="appearance_desc">Тема й колір акценту застосовуються до всього застосунку.</string>
+    <string name="theme_label">Тема</string>
+    <string name="theme_dark">Поточна темна</string>
+    <string name="theme_amoled">Чорна AMOLED</string>
+    <string name="accent_label">Колір акценту</string>
+    <string name="accent_reset">Відновити типовий акцент</string>
+    <string name="appearance_note">Зміни застосовуються одразу.</string>
 </resources>

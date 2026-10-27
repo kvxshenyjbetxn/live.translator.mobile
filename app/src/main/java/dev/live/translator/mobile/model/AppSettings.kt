@@ -9,6 +9,8 @@ data class AppSettings(
     val pinnedPackages: List<String> = emptyList(),
     val recentPackages: List<String> = emptyList(),
     val translationBoostDb: Int = DEFAULT_TRANSLATION_BOOST_DB,
+    val theme: ThemeMode = ThemeMode.DARK,
+    val accent: AccentPreset = AccentPreset.DEFAULT,
 ) {
     companion object {
         const val CURRENT_SCHEMA = 1

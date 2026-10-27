@@ -5,17 +5,26 @@ import android.os.Bundle
 import android.text.Editable
 import android.text.InputType
 import android.text.TextWatcher
+import android.graphics.drawable.GradientDrawable
+import android.graphics.drawable.InsetDrawable
+import android.view.View
 import android.widget.Button
+import android.widget.LinearLayout
 import android.widget.EditText
+import android.widget.ImageButton
 import android.widget.SeekBar
 import android.widget.TextView
 import dev.live.translator.mobile.audio.TranslationVolume
 import dev.live.translator.mobile.gemini.GeminiWebSocketTransport
+import dev.live.translator.mobile.model.AccentPreset
 import dev.live.translator.mobile.model.AppSettings
+import dev.live.translator.mobile.model.ThemeMode
 import dev.live.translator.mobile.settings.SaveResult
 import dev.live.translator.mobile.settings.SettingsAutosaveController
 import dev.live.translator.mobile.settings.SettingsRepository
+import dev.live.translator.mobile.ui.Appearance
 import dev.live.translator.mobile.ui.applySystemBarInsets
+import dev.live.translator.mobile.ui.themeColor
 import kotlin.coroutines.Continuation
 import kotlin.coroutines.EmptyCoroutineContext
 import kotlin.coroutines.startCoroutine
@@ -34,6 +43,7 @@ class SettingsActivity : Activity() {
     @Volatile private var latestKey = ""
 
     override fun onCreate(savedInstanceState: Bundle?) {
+        val appearance = Appearance.apply(this)
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_settings)
         findViewById<android.view.View>(R.id.pageRoot).applySystemBarInsets()
@@ -61,6 +71,8 @@ class SettingsActivity : Activity() {
             override fun onStartTrackingTouch(seekBar: SeekBar?) = Unit
             override fun onStopTrackingTouch(seekBar: SeekBar?) { seekBar?.let { saveBoost(it.progress) } }
         })
+        setupAppearance(appearance)
+        findViewById<ImageButton>(R.id.backButton).setOnClickListener { finish() }
         findViewById<Button>(R.id.toggleKeyButton).setOnClickListener { toggleVisibility() }
         findViewById<Button>(R.id.removeKeyButton).setOnClickListener { keyInput.setText("") }
         findViewById<Button>(R.id.checkButton).setOnClickListener { checkConnection() }
@@ -103,6 +115,47 @@ class SettingsActivity : Activity() {
     override fun onDestroy() {
         autosave.close()
         super.onDestroy()
+    }
+
+    private fun setupAppearance(appearance: Appearance) {
+        findViewById<Button>(R.id.themeDarkButton).apply {
+            isSelected = appearance.theme == ThemeMode.DARK
+            setOnClickListener { saveAppearance { it.copy(theme = ThemeMode.DARK) } }
+        }
+        findViewById<Button>(R.id.themeAmoledButton).apply {
+            isSelected = appearance.theme == ThemeMode.AMOLED
+            setOnClickListener { saveAppearance { it.copy(theme = ThemeMode.AMOLED) } }
+        }
+        findViewById<Button>(R.id.resetAccentButton).setOnClickListener { saveAppearance { it.copy(accent = AccentPreset.DEFAULT) } }
+        val rows = listOf(findViewById<LinearLayout>(R.id.accentRowTop), findViewById<LinearLayout>(R.id.accentRowBottom))
+        val perRow = (AccentPreset.entries.size + 1) / 2
+        AccentPreset.entries.forEachIndexed { i, preset -> rows[i / perRow].addView(swatch(preset, preset == appearance.accent)) }
+    }
+
+    private fun swatch(preset: AccentPreset, selected: Boolean): View {
+        val density = resources.displayMetrics.density
+        val circle = GradientDrawable().apply {
+            shape = GradientDrawable.OVAL
+            setColor(preset.argb)
+            if (selected) setStroke((2 * density).toInt(), themeColor(R.attr.ltText))
+        }
+        return View(this).apply {
+            background = InsetDrawable(circle, (7 * density).toInt())
+            contentDescription = preset.label
+            layoutParams = LinearLayout.LayoutParams((44 * density).toInt(), (44 * density).toInt()).apply { marginEnd = (6 * density).toInt() }
+            setOnClickListener { saveAppearance { it.copy(accent = preset) } }
+        }
+    }
+
+    private fun saveAppearance(transform: (AppSettings) -> AppSettings) {
+        autosave.flush()
+        Thread {
+            val result = try { runSuspend { repository.update(transform) } } catch (_: Exception) { null }
+            runOnUiThread {
+                if (result is SaveResult.Saved) recreate()
+                else status.text = "Не вдалося зберегти налаштування."
+            }
+        }.start()
     }
 
     private fun updateBoostLabel(db: Int) {

@@ -13,7 +13,7 @@ import dev.live.translator.mobile.diagnostics.ChartGraph
 class DiagnosticsChartView(context: Context, attrs: AttributeSet? = null) : View(context, attrs) {
     private val density = resources.displayMetrics.density
     private val grid = Paint(Paint.ANTI_ALIAS_FLAG).apply {
-        color = context.getColor(R.color.line)
+        color = context.themeColor(R.attr.ltLine)
         style = Paint.Style.STROKE
         strokeWidth = density
         pathEffect = DashPathEffect(floatArrayOf(4 * density, 3 * density), 0f)

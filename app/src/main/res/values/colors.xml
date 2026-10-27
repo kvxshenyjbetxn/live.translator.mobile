@@ -14,4 +14,9 @@
     <color name="diag_sending">#E35BE8</color>
     <color name="diag_playback">#E6BC80</color>
     <color name="diag_nodata">#6E8794</color>
+    <color name="eyebrow">#94A48C</color>
+    <color name="field_label">#B0BDB0</color>
+    <color name="subtle">#83917F</color>
+    <color name="text_button">#BCCAB3</color>
+    <color name="notice_border">#414C39</color>
 </resources>

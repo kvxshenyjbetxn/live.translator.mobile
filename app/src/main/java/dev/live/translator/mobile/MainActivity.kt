@@ -45,6 +45,8 @@ import dev.live.translator.mobile.source.SourceCatalog
 import dev.live.translator.mobile.source.SourceUnavailable
 import dev.live.translator.mobile.settings.SettingsValidator
 import dev.live.translator.mobile.ui.AppPickerAdapter
+import dev.live.translator.mobile.ui.Appearance
+import dev.live.translator.mobile.ui.themeColor
 import dev.live.translator.mobile.ui.MainViewModel
 import dev.live.translator.mobile.ui.TargetSections
 import dev.live.translator.mobile.ui.applySystemBarInsets
@@ -64,6 +66,7 @@ class MainActivity : Activity() {
     private lateinit var start: Button
     private lateinit var stop: Button
     private var settings = AppSettings()
+    private lateinit var appearance: Appearance
     private var targets = emptyList<CaptureTarget>()
     private var selectedTarget: CaptureTarget? = null
     private var pickerRender: (() -> Unit)? = null
@@ -87,6 +90,7 @@ class MainActivity : Activity() {
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
+        appearance = Appearance.apply(this)
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
         findViewById<View>(R.id.pageRoot).applySystemBarInsets()
@@ -144,6 +148,7 @@ class MainActivity : Activity() {
             val loaded = try { runSuspend { settingsRepository.load() } } catch (_: Exception) { settings }
             TranslationVolume.boostDb = loaded.translationBoostDb
             runOnUiThread {
+                if (Appearance.of(loaded) != appearance) { recreate(); return@runOnUiThread }
                 settings = loaded
                 refreshTargets()
             }
@@ -205,7 +210,7 @@ class MainActivity : Activity() {
                 text = language.name
                 textSize = 16f
                 isAllCaps = false
-                setTextColor(getColor(R.color.text))
+                setTextColor(themeColor(R.attr.ltText))
                 setBackgroundResource(R.drawable.button_background)
                 minHeight = (52 * density).toInt()
                 gravity = Gravity.START or Gravity.CENTER_VERTICAL
@@ -236,7 +241,7 @@ class MainActivity : Activity() {
         val colors = listOf(R.color.diag_network, R.color.diag_sending, R.color.diag_playback)
         rows.forEachIndexed { i, row -> bindDiagnosticsRow(diagRows[i], row, getColor(colors[i])) }
         diagMessages.text = (DiagnosticTexts.diagnosticMessages(live) + listOfNotNull(DiagnosticTexts.NETWORK_UNKNOWN.takeIf { live.networkRttMs == null })).joinToString("\n\n")
-        diagMessages.setTextColor(getColor(if (live.issues.isEmpty()) R.color.muted else R.color.diag_playback))
+        diagMessages.setTextColor(if (live.issues.isEmpty()) themeColor(R.attr.ltMuted) else getColor(R.color.diag_playback))
     }
 
     private fun bindDiagnosticsRow(view: View, row: DiagnosticsRow, color: Int) {

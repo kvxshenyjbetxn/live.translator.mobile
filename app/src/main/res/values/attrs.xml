@@ -1,0 +1,14 @@
+<resources>
+    <attr name="ltBackground" format="color" />
+    <attr name="ltSidebar" format="color" />
+    <attr name="ltSurface" format="color" />
+    <attr name="ltInput" format="color" />
+    <attr name="ltButton" format="color" />
+    <attr name="ltHover" format="color" />
+    <attr name="ltText" format="color" />
+    <attr name="ltMuted" format="color" />
+    <attr name="ltLine" format="color" />
+    <attr name="ltPanel" format="color" />
+    <attr name="ltAccent" format="color" />
+    <attr name="ltAccentText" format="color" />
+</resources>

@@ -66,7 +66,7 @@ class AppPickerAdapter(
                 row.contentDescription = null
                 row.findViewById<TextView>(R.id.pinToggle).apply {
                     text = if (isPinned) "★" else "☆"
-                    setTextColor(context.getColor(if (isPinned) R.color.accent else R.color.muted))
+                    setTextColor(context.themeColor(if (isPinned) R.attr.ltAccent else R.attr.ltMuted))
                     contentDescription = if (isPinned) "Відкріпити" else "Закріпити"
                     setOnClickListener { onPinToggled(target) }
                 }

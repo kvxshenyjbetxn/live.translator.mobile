@@ -1,6 +1,8 @@
 package dev.live.translator.mobile.settings
 
+import dev.live.translator.mobile.model.AccentPreset
 import dev.live.translator.mobile.model.AppSettings
+import dev.live.translator.mobile.model.ThemeMode
 import java.nio.file.Files
 import kotlin.coroutines.Continuation
 import kotlin.coroutines.EmptyCoroutineContext
@@ -88,5 +90,36 @@ class SettingsRepositoryTest {
             runSuspend { SettingsRepository(directory).update { it.copy(targetLanguage = code) } }
             assertEquals(code, runSuspend { SettingsRepository(directory).load() }.targetLanguage)
         }
+    }
+
+    @Test fun roundTripsAppearance() {
+        val directory = Files.createTempDirectory("mobile-settings-appearance").toFile()
+        runSuspend { SettingsRepository(directory).update { it.copy(theme = ThemeMode.AMOLED, accent = AccentPreset.CORAL) } }
+        val loaded = runSuspend { SettingsRepository(directory).load() }
+        assertEquals(ThemeMode.AMOLED, loaded.theme)
+        assertEquals(AccentPreset.CORAL, loaded.accent)
+    }
+
+    @Test fun legacyFileWithoutAppearanceLoadsDefaults() {
+        val directory = Files.createTempDirectory("mobile-settings-noappearance").toFile()
+        java.io.File(directory, "settings.json").writeText("""{"schemaVersion":1,"apiKey":"","selectedPackage":null,"selectedLabel":null,"targetLanguage":"uk"}""")
+        val loaded = runSuspend { SettingsRepository(directory).load() }
+        assertEquals(ThemeMode.DARK, loaded.theme)
+        assertEquals(AccentPreset.LIME, loaded.accent)
+    }
+
+    @Test fun unknownAppearanceValuesFallBackToDefaults() {
+        val directory = Files.createTempDirectory("mobile-settings-badappearance").toFile()
+        java.io.File(directory, "settings.json").writeText("""{"schemaVersion":1,"apiKey":"","selectedPackage":null,"selectedLabel":null,"targetLanguage":"uk","theme":"NEON","accent":null}""")
+        val loaded = runSuspend { SettingsRepository(directory).load() }
+        assertEquals(ThemeMode.DARK, loaded.theme)
+        assertEquals(AccentPreset.LIME, loaded.accent)
+    }
+
+    @Test fun peekReturnsSavedAppearanceAndDefaultsWhenMissing() {
+        val directory = Files.createTempDirectory("mobile-settings-peek").toFile()
+        assertEquals(AppSettings(), SettingsRepository(directory).peek())
+        runSuspend { SettingsRepository(directory).update { it.copy(accent = AccentPreset.PINK) } }
+        assertEquals(AccentPreset.PINK, SettingsRepository(directory).peek().accent)
     }
 }

@@ -1,6 +1,8 @@
 package dev.live.translator.mobile.settings
 
+import dev.live.translator.mobile.model.AccentPreset
 import dev.live.translator.mobile.model.AppSettings
+import dev.live.translator.mobile.model.ThemeMode
 import java.io.File
 import java.io.FileOutputStream
 import java.nio.file.Files
@@ -28,6 +30,11 @@ class SettingsRepository(
         val parsed = readFromDisk()
         current = parsed
         parsed
+    }
+
+    /** Synchronous read for theming before the first frame; falls back to defaults if unreadable. */
+    fun peek(): AppSettings = synchronized(lock) {
+        current ?: try { readFromDisk().also { current = it } } catch (_: SettingsException) { AppSettings() }
     }
 
     suspend fun update(transform: (AppSettings) -> AppSettings): SaveResult = synchronized(lock) {
@@ -84,7 +91,7 @@ class SettingsRepository(
 
     private fun parse(text: String): AppSettings {
         val json = org.json.JSONObject(text)
-        val allowed = setOf("schemaVersion", "apiKey", "selectedPackage", "selectedLabel", "targetLanguage", "pinnedPackages", "recentPackages", "translationBoostDb")
+        val allowed = setOf("schemaVersion", "apiKey", "selectedPackage", "selectedLabel", "targetLanguage", "pinnedPackages", "recentPackages", "translationBoostDb", "theme", "accent")
         json.keys().asSequence().forEach { if (it !in allowed) throw SettingsValidationError.UnsupportedSchema }
         val settings = AppSettings(
             schemaVersion = json.getInt("schemaVersion"),
@@ -95,6 +102,8 @@ class SettingsRepository(
             pinnedPackages = readList(json, "pinnedPackages"),
             recentPackages = readList(json, "recentPackages"),
             translationBoostDb = json.optInt("translationBoostDb", AppSettings.DEFAULT_TRANSLATION_BOOST_DB),
+            theme = ThemeMode.fromName(json.optString("theme", "")),
+            accent = AccentPreset.fromName(json.optString("accent", "")),
         )
         return SettingsValidator.validate(settings)
     }
@@ -113,6 +122,8 @@ class SettingsRepository(
         .put("pinnedPackages", org.json.JSONArray(settings.pinnedPackages))
         .put("recentPackages", org.json.JSONArray(settings.recentPackages))
         .put("translationBoostDb", settings.translationBoostDb)
+        .put("theme", settings.theme.name)
+        .put("accent", settings.accent.name)
         .toString()
 
     companion object {
