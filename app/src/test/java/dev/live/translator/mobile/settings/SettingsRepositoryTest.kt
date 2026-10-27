@@ -53,4 +53,28 @@ class SettingsRepositoryTest {
         val corrupt = try { runSuspend { SettingsRepository(directory).load() }; null } catch (error: SettingsException) { error }
         assertEquals(FailureCategory.CORRUPT, corrupt?.category)
     }
+
+    @Test fun legacyFileWithoutListsLoadsWithEmptyLists() {
+        val directory = Files.createTempDirectory("mobile-settings-legacy").toFile()
+        java.io.File(directory, "settings.json").writeText("""{"schemaVersion":1,"apiKey":"","selectedPackage":null,"selectedLabel":null,"targetLanguage":"uk"}""")
+        val loaded = runSuspend { SettingsRepository(directory).load() }
+        assertEquals(emptyList(), loaded.pinnedPackages)
+        assertEquals(emptyList(), loaded.recentPackages)
+    }
+
+    @Test fun roundTripsPinnedAndRecent() {
+        val directory = Files.createTempDirectory("mobile-settings-lists").toFile()
+        runSuspend { SettingsRepository(directory).update { it.copy(pinnedPackages = listOf("com.a", "com.b"), recentPackages = listOf("com.c")) } }
+        val loaded = runSuspend { SettingsRepository(directory).load() }
+        assertEquals(listOf("com.a", "com.b"), loaded.pinnedPackages)
+        assertEquals(listOf("com.c"), loaded.recentPackages)
+    }
+
+    @Test fun roundTripsTargetLanguage() {
+        val directory = Files.createTempDirectory("mobile-settings-lang").toFile()
+        listOf("en", "pl", "de", "uk").forEach { code ->
+            runSuspend { SettingsRepository(directory).update { it.copy(targetLanguage = code) } }
+            assertEquals(code, runSuspend { SettingsRepository(directory).load() }.targetLanguage)
+        }
+    }
 }

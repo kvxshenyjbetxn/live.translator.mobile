@@ -19,6 +19,8 @@ import android.os.Looper
 import dev.live.translator.mobile.MainActivity
 import dev.live.translator.mobile.audio.PlaybackCaptureReader
 import dev.live.translator.mobile.audio.TranslatedAudioPlayer
+import dev.live.translator.mobile.diagnostics.DiagnosticsSampler
+import dev.live.translator.mobile.diagnostics.DiagnosticsSnapshot
 import dev.live.translator.mobile.diagnostics.SessionEvent
 import dev.live.translator.mobile.diagnostics.SessionTrace
 import dev.live.translator.mobile.diagnostics.TerminalCause
@@ -27,6 +29,7 @@ import dev.live.translator.mobile.gemini.GeminiLiveTransport
 import dev.live.translator.mobile.gemini.GeminiWebSocketTransport
 import dev.live.translator.mobile.gemini.LiveConnection
 import dev.live.translator.mobile.gemini.ProtocolFailure
+import dev.live.translator.mobile.model.Languages
 import dev.live.translator.mobile.session.LiveSession
 import dev.live.translator.mobile.session.terminalCause
 import kotlin.coroutines.Continuation
@@ -53,6 +56,8 @@ class TranslationForegroundService : Service() {
     private val sessionGate = SessionGenerationGate()
     private var destroyed = false
     private var listener: ((SessionState) -> Unit)? = null
+    @Volatile private var diagnosticsListener: ((DiagnosticsSnapshot) -> Unit)? = null
+    private var sampler: DiagnosticsSampler? = null
     private var state = SessionState()
     private var startup: Startup? = null
     private var session: LiveSession? = null
@@ -71,6 +76,8 @@ class TranslationForegroundService : Service() {
         notifyState()
     }
 
+    fun setDiagnosticsListener(newListener: ((DiagnosticsSnapshot) -> Unit)?) { diagnosticsListener = newListener }
+
     fun currentState(): SessionState = state
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
@@ -88,11 +95,11 @@ class TranslationForegroundService : Service() {
             fail("Не отримано всі дозволи або джерело недоступне.")
             return START_NOT_STICKY
         }
-        startSession(resultCode, projectionData, apiKey, selectedUid)
+        startSession(resultCode, projectionData, apiKey, selectedUid, Languages.normalize(intent?.getStringExtra(EXTRA_TARGET_LANGUAGE)))
         return START_NOT_STICKY
     }
 
-    private fun startSession(resultCode: Int, projectionData: Intent, apiKey: String, selectedUid: Int) {
+    private fun startSession(resultCode: Int, projectionData: Intent, apiKey: String, selectedUid: Int, targetLanguage: String) {
         val id: Long
         val resources: Startup
         synchronized(lifecycleLock) {
@@ -140,7 +147,7 @@ class TranslationForegroundService : Service() {
         Thread({
             var connection: LiveConnection? = null
             try {
-                connection = runSuspend { transport.open(apiKey, "uk", resources.token) }
+                connection = runSuspend { transport.open(apiKey, targetLanguage, resources.token) }
                 val sessionTrace = resources.trace
                 sessionTrace.event(SessionEvent.TRANSPORT_READY)
                 synchronized(lifecycleLock) {
@@ -158,6 +165,13 @@ class TranslationForegroundService : Service() {
                     state = SessionState(SessionPhase.RUNNING, "Переклад працює. Можна перейти до вибраної програми.")
                     notifyState()
                     liveSession.start()
+                    sampler = DiagnosticsSampler(
+                        liveSession::pendingSendSeconds,
+                        liveSession::queuedPlaybackSeconds,
+                        transport::probeRttMs,
+                        { diagnosticsListener != null },
+                        { snapshot -> mainHandler.post { diagnosticsListener?.invoke(snapshot) } },
+                    ).also { it.start() }
                 }
             } catch (failure: Exception) {
                 if (!resources.token.isCancelled()) resources.trace.terminal((failure as? ProtocolFailure)?.terminalCause() ?: TerminalCause.OTHER)
@@ -194,15 +208,19 @@ class TranslationForegroundService : Service() {
     private fun stopSession(message: String) {
         val activeStartup: Startup?
         val activeSession: LiveSession?
+        val activeSampler: DiagnosticsSampler?
         synchronized(lifecycleLock) {
             sessionGate.invalidate()
             activeStartup = startup
             activeSession = session
+            activeSampler = sampler
+            sampler = null
             activeStartup?.token?.cancel()
             session = null
             state = SessionState(SessionPhase.STOPPING, message)
             notifyState()
         }
+        activeSampler?.stop()
         activeSession?.cancel()
         activeStartup?.let {
             it.reader.stop()
@@ -239,6 +257,9 @@ class TranslationForegroundService : Service() {
             startup = null
             session = null
             listener = null
+            diagnosticsListener = null
+            sampler?.stop()
+            sampler = null
         }
         activeSession?.cancel()
         activeStartup?.let {
@@ -304,6 +325,7 @@ class TranslationForegroundService : Service() {
         const val EXTRA_PROJECTION_DATA = "projection_data"
         const val EXTRA_API_KEY = "api_key"
         const val EXTRA_SELECTED_UID = "selected_uid"
+        const val EXTRA_TARGET_LANGUAGE = "target_language"
         private const val CHANNEL_ID = "live_translator"
         private const val NOTIFICATION_ID = 1001
         private const val RESULT_OK = -1

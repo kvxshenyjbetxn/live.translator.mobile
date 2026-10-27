@@ -5,6 +5,7 @@ import android.media.AudioFormat
 import android.media.AudioTrack
 import java.util.concurrent.ArrayBlockingQueue
 import java.util.concurrent.atomic.AtomicBoolean
+import java.util.concurrent.atomic.AtomicInteger
 
 class PlaybackFormatException(message: String) : Exception(message)
 
@@ -12,12 +13,15 @@ interface TranslationPlayer {
     fun start(onFailure: (Exception) -> Unit = {})
     fun playPcm24k(pcm: ShortArray)
     fun stopAndRelease()
+    fun queuedSeconds(): Double = 0.0
 }
 
 class TranslatedAudioPlayer(private val queueCapacity: Int = 8) : TranslationPlayer {
     private val queue = ArrayBlockingQueue<ShortArray>(queueCapacity)
     private val running = AtomicBoolean(false)
-    private var track: AudioTrack? = null
+    @Volatile private var track: AudioTrack? = null
+    private val queuedSamples = AtomicInteger()
+    @Volatile private var writtenFrames = 0L
     private var thread: Thread? = null
 
     override fun start(onFailure: (Exception) -> Unit) {
@@ -58,6 +62,15 @@ class TranslatedAudioPlayer(private val queueCapacity: Int = 8) : TranslationPla
     override fun playPcm24k(pcm: ShortArray) {
         require(running.get()) { "Player is not running" }
         if (!queue.offer(pcm.copyOf())) throw IllegalStateException("Черга відтворення переповнена")
+        queuedSamples.addAndGet(pcm.size)
+    }
+
+    override fun queuedSeconds(): Double {
+        val queued = queuedSamples.get().coerceAtLeast(0)
+        val inTrack = try {
+            track?.let { t -> (writtenFrames - (t.playbackHeadPosition.toLong() and 0xFFFFFFFFL)).coerceIn(0, t.bufferSizeInFrames.toLong()) } ?: 0L
+        } catch (_: Exception) { 0L }
+        return (queued + inTrack) / OUTPUT_RATE.toDouble()
     }
 
     private fun playbackLoop(created: AudioTrack, onFailure: (Exception) -> Unit) {
@@ -76,6 +89,8 @@ class TranslatedAudioPlayer(private val queueCapacity: Int = 8) : TranslationPla
                     break
                 }
                 offset += written
+                writtenFrames += written
+                queuedSamples.addAndGet(-written)
             }
         }
     }
@@ -83,6 +98,7 @@ class TranslatedAudioPlayer(private val queueCapacity: Int = 8) : TranslationPla
     override fun stopAndRelease() {
         if (!running.getAndSet(false) && track == null) return
         queue.clear()
+        queuedSamples.set(0)
         thread?.interrupt()
         thread = null
         track?.let {

@@ -2,6 +2,7 @@ package dev.live.translator.mobile.source
 
 import android.content.Context
 import android.content.Intent
+import android.content.pm.ApplicationInfo
 import android.content.pm.PackageManager
 import android.os.Build
 import dev.live.translator.mobile.model.CaptureTarget
@@ -24,6 +25,7 @@ class SourceCatalog(private val context: Context) {
                     label = app.loadLabel(packageManager).toString().ifBlank { app.packageName },
                     uid = app.uid,
                     available = app.enabled,
+                    isMedia = app.category in MEDIA_CATEGORIES,
                 )
             }
         return filterTargets(records, ownPackage, ownUid)
@@ -45,6 +47,8 @@ class SourceCatalog(private val context: Context) {
     }
 
     companion object {
+        private val MEDIA_CATEGORIES = setOf(ApplicationInfo.CATEGORY_AUDIO, ApplicationInfo.CATEGORY_VIDEO, ApplicationInfo.CATEGORY_GAME)
+
         fun filterTargets(records: List<CaptureTarget>, ownPackage: String, ownUid: Int): List<CaptureTarget> =
             records.asSequence()
                 .filter { it.packageName != ownPackage && it.uid != ownUid }

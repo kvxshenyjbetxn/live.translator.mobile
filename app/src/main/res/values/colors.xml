@@ -10,4 +10,8 @@
     <color name="line">#303936</color>
     <color name="accent">#C5E89D</color>
     <color name="panel">#212725</color>
+    <color name="diag_network">#8EBCD2</color>
+    <color name="diag_sending">#E35BE8</color>
+    <color name="diag_playback">#E6BC80</color>
+    <color name="diag_nodata">#6E8794</color>
 </resources>

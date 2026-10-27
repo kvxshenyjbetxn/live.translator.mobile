@@ -9,9 +9,9 @@ import kotlin.test.assertTrue
 
 class MainViewModelTest {
     @Test fun sourceSummaryShowsSelectedUnavailableAndEmptyStates() {
-        assertEquals("Джерело: виберіть програму ▾", MainViewModel.sourceSummary(null))
-        assertEquals("Джерело: Video ▾", MainViewModel.sourceSummary(CaptureTarget("com.video", "Video", 10)))
-        assertEquals("Джерело: Video (недоступна) ▾", MainViewModel.sourceSummary(CaptureTarget("com.video", "Video", -1, available = false)))
+        assertEquals("Виберіть програму ▾", MainViewModel.sourceSummary(null))
+        assertEquals("Video ▾", MainViewModel.sourceSummary(CaptureTarget("com.video", "Video", 10)))
+        assertEquals("Video (недоступна) ▾", MainViewModel.sourceSummary(CaptureTarget("com.video", "Video", -1, available = false)))
     }
 
     @Test fun retainedSelectionRemainsVisibleAsUnavailable() {

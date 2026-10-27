@@ -1,5 +1,6 @@
 package dev.live.translator.mobile.gemini
 
+import dev.live.translator.mobile.model.Languages
 import java.util.Base64
 import org.json.JSONArray
 import org.json.JSONObject
@@ -35,7 +36,7 @@ sealed class TranslationAudioEvent {
 
 object GeminiProtocol {
     fun setup(targetLanguage: String = "uk"): String {
-        require(targetLanguage == "uk") { "Unsupported target language" }
+        require(Languages.isSupported(targetLanguage)) { "Unsupported target language" }
         return JSONObject().put("setup", JSONObject()
             .put("model", GEMINI_MODEL)
             .put("generationConfig", JSONObject()

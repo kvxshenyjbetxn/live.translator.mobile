@@ -19,6 +19,14 @@ class GeminiProtocolTest {
         assertEquals("AAAAgA==", Base64.getEncoder().encodeToString(byteArrayOf(0, 0, 0, 0x80.toByte())))
     }
 
+    @Test fun setupAcceptsEverySupportedLanguageAndRejectsOthers() {
+        listOf("uk", "en", "pl", "de").forEach {
+            val target = org.json.JSONObject(GeminiProtocol.setup(it)).getJSONObject("setup").getJSONObject("generationConfig").getJSONObject("translationConfig")
+            assertEquals(it, target.getString("targetLanguageCode"))
+        }
+        assertFailsWith<IllegalArgumentException> { GeminiProtocol.setup("fr") }
+    }
+
     @Test fun rejectsWrongPacketLengths() {
         assertFailsWith<IllegalArgumentException> { GeminiProtocol.audioMessage(ShortArray(1599)) }
         assertFailsWith<IllegalArgumentException> { GeminiProtocol.audioMessage(ShortArray(1601)) }

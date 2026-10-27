@@ -26,7 +26,7 @@ class StreamingResampler(inputRate: Int) {
     companion object { const val OUTPUT_RATE = 16_000 }
 }
 
-class PcmPacketizer(private val packetSize: Int = 1600) {
+class PcmPacketizer(private val packetSize: Int = PACKET_SAMPLES) {
     private val pending = ArrayList<Short>(packetSize)
 
     fun add(samples: ShortArray): List<ShortArray> {
@@ -42,4 +42,9 @@ class PcmPacketizer(private val packetSize: Int = 1600) {
     }
 
     fun clear() { pending.clear() }
+
+    companion object {
+        const val PACKET_SAMPLES = 1600
+        const val PACKET_SECONDS = PACKET_SAMPLES / 16_000.0
+    }
 }

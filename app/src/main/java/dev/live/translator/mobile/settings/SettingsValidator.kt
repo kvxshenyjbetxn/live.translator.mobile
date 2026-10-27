@@ -1,6 +1,7 @@
 package dev.live.translator.mobile.settings
 
 import dev.live.translator.mobile.model.AppSettings
+import dev.live.translator.mobile.model.Languages
 
 sealed class SettingsValidationError : Exception() {
     data object UnsupportedSchema : SettingsValidationError()
@@ -15,6 +16,12 @@ object SettingsValidator {
     private const val MAX_PACKAGE_LENGTH = 256
     private const val MAX_LABEL_LENGTH = 512
     private val keyPattern = Regex("[A-Za-z0-9._-]+")
+
+    const val MAX_PINNED = 50
+    const val MAX_RECENT = 5
+
+    private fun cleanPackages(values: List<String>, max: Int): List<String> =
+        values.filter { it.isNotBlank() && it.length <= MAX_PACKAGE_LENGTH && keyPattern.matches(it) }.distinct().take(max)
 
     fun validate(settings: AppSettings): AppSettings {
         if (settings.schemaVersion != AppSettings.CURRENT_SCHEMA) throw SettingsValidationError.UnsupportedSchema
@@ -31,7 +38,10 @@ object SettingsValidator {
             (settings.selectedLabel.isBlank() || settings.selectedLabel.length > MAX_LABEL_LENGTH)) {
             throw SettingsValidationError.InvalidLabel
         }
-        if (settings.targetLanguage != AppSettings.TARGET_LANGUAGE) throw SettingsValidationError.UnsupportedLanguage
-        return settings
+        if (!Languages.isSupported(settings.targetLanguage)) throw SettingsValidationError.UnsupportedLanguage
+        val pinned = cleanPackages(settings.pinnedPackages, MAX_PINNED)
+        val recent = cleanPackages(settings.recentPackages, MAX_RECENT)
+        return if (pinned == settings.pinnedPackages && recent == settings.recentPackages) settings
+        else settings.copy(pinnedPackages = pinned, recentPackages = recent)
     }
 }

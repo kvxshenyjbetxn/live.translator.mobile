@@ -84,7 +84,7 @@ class SettingsRepository(
 
     private fun parse(text: String): AppSettings {
         val json = org.json.JSONObject(text)
-        val allowed = setOf("schemaVersion", "apiKey", "selectedPackage", "selectedLabel", "targetLanguage")
+        val allowed = setOf("schemaVersion", "apiKey", "selectedPackage", "selectedLabel", "targetLanguage", "pinnedPackages", "recentPackages")
         json.keys().asSequence().forEach { if (it !in allowed) throw SettingsValidationError.UnsupportedSchema }
         val settings = AppSettings(
             schemaVersion = json.getInt("schemaVersion"),
@@ -92,8 +92,15 @@ class SettingsRepository(
             selectedPackage = if (json.isNull("selectedPackage")) null else json.getString("selectedPackage"),
             selectedLabel = if (json.isNull("selectedLabel")) null else json.getString("selectedLabel"),
             targetLanguage = json.getString("targetLanguage"),
+            pinnedPackages = readList(json, "pinnedPackages"),
+            recentPackages = readList(json, "recentPackages"),
         )
         return SettingsValidator.validate(settings)
+    }
+
+    private fun readList(json: org.json.JSONObject, key: String): List<String> {
+        val array = json.optJSONArray(key) ?: return emptyList()
+        return List(array.length()) { array.getString(it) }
     }
 
     private fun encode(settings: AppSettings): String = org.json.JSONObject()
@@ -102,6 +109,8 @@ class SettingsRepository(
         .put("selectedPackage", settings.selectedPackage)
         .put("selectedLabel", settings.selectedLabel)
         .put("targetLanguage", settings.targetLanguage)
+        .put("pinnedPackages", org.json.JSONArray(settings.pinnedPackages))
+        .put("recentPackages", org.json.JSONArray(settings.recentPackages))
         .toString()
 
     companion object {

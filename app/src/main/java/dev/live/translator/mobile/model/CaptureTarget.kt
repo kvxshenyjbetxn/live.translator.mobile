@@ -5,6 +5,7 @@ data class CaptureTarget(
     val label: String,
     val uid: Int,
     val available: Boolean = true,
+    val isMedia: Boolean = false,
 )
 
 data class ResolvedCaptureTarget(

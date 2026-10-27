@@ -17,9 +17,9 @@ class MainViewModel {
 
     companion object {
         fun sourceSummary(target: CaptureTarget?): String = when {
-            target == null -> "Джерело: виберіть програму ▾"
-            !target.available -> "Джерело: ${target.label} (недоступна) ▾"
-            else -> "Джерело: ${target.label} ▾"
+            target == null -> "Виберіть програму ▾"
+            !target.available -> "${target.label} (недоступна) ▾"
+            else -> "${target.label} ▾"
         }
 
         fun withRetainedSelection(visible: List<CaptureTarget>, settings: AppSettings): List<CaptureTarget> {

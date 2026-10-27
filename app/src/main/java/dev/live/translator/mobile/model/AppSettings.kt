@@ -6,6 +6,8 @@ data class AppSettings(
     val selectedPackage: String? = null,
     val selectedLabel: String? = null,
     val targetLanguage: String = TARGET_LANGUAGE,
+    val pinnedPackages: List<String> = emptyList(),
+    val recentPackages: List<String> = emptyList(),
 ) {
     companion object {
         const val CURRENT_SCHEMA = 1

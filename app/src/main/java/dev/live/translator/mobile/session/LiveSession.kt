@@ -97,6 +97,10 @@ class LiveSession(
         }
     }
 
+    fun pendingSendSeconds(): Double = inputQueue.size * PcmPacketizer.PACKET_SECONDS + connection.pendingSendSeconds()
+
+    fun queuedPlaybackSeconds(): Double = player.queuedSeconds()
+
     fun cancel() {
         if (!cancelled.getAndSet(true)) cleanup()
     }

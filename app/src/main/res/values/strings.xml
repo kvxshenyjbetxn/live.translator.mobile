@@ -15,4 +15,12 @@
     <string name="key_plaintext_warning">Ключ зберігається у відкритому вигляді лише у приватних даних цього застосунку. Не передавайте його.</string>
     <string name="free_tier_note">Безкоштовний рівень і обробка даних Google можуть мати обмеження. Цей застосунок не вмикає оплату та не гарантує квоту.</string>
     <string name="saved">Збережено</string>
+    <string name="language_title">МОВА ПЕРЕКЛАДУ</string>
+    <string name="diag_title">Діагностика затримки</string>
+    <string name="diag_window">Черги · останні 10 с</string>
+    <string name="diag_axis_start">−10 с</string>
+    <string name="diag_axis_mid">−5 с</string>
+    <string name="diag_axis_end">зараз</string>
+    <string name="diag_note_https">HTTPS-запит до сервера Google — відгук з’єднання, не час перекладу. Кожен стовпчик — фактичне вимірювання приблизно раз на 4 с.</string>
+    <string name="diag_note_video">Ці показники не вимірюють точне відставання від відео.</string>
 </resources>

@@ -13,6 +13,7 @@ import dev.live.translator.mobile.model.AppSettings
 import dev.live.translator.mobile.settings.SaveResult
 import dev.live.translator.mobile.settings.SettingsAutosaveController
 import dev.live.translator.mobile.settings.SettingsRepository
+import dev.live.translator.mobile.ui.applySystemBarInsets
 import kotlin.coroutines.Continuation
 import kotlin.coroutines.EmptyCoroutineContext
 import kotlin.coroutines.startCoroutine
@@ -31,6 +32,7 @@ class SettingsActivity : Activity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_settings)
+        findViewById<android.view.View>(R.id.pageRoot).applySystemBarInsets()
         repository = SettingsRepository.shared(filesDir)
         autosave = SettingsAutosaveController(repository) { result ->
             runOnUiThread {

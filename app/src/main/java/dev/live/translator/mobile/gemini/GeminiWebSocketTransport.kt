@@ -20,6 +20,7 @@ interface GeminiLiveTransport {
     suspend fun open(apiKey: String, targetLanguage: String = "uk"): LiveConnection
     suspend fun open(apiKey: String, targetLanguage: String, cancellation: CancellationSignal): LiveConnection =
         open(apiKey, targetLanguage)
+    fun probeRttMs(): Double? = null
 }
 
 data class ConnectionReport(val model: String, val elapsedMs: Long)
@@ -27,6 +28,7 @@ data class ConnectionReport(val model: String, val elapsedMs: Long)
 interface LiveConnection : AutoCloseable {
     fun sendPcm16k(packet: ShortArray)
     fun receive(): TranslationAudioEvent
+    fun pendingSendSeconds(): Double = 0.0
     fun cancel()
     override fun close() = cancel()
 }
@@ -95,6 +97,13 @@ class GeminiWebSocketTransport(
         connection.cancel()
         return ConnectionReport(GEMINI_MODEL.removePrefix("models/"), elapsedMs = (System.nanoTime() - started) / 1_000_000)
     }
+
+    override fun probeRttMs(): Double? = try {
+        val call = client.newCall(Request.Builder().url(PROBE_URL).head().build())
+        call.timeout().timeout(3, TimeUnit.SECONDS)
+        val started = System.nanoTime()
+        call.execute().use { (System.nanoTime() - started) / 1e6 }
+    } catch (_: Exception) { null }
 
     override suspend fun open(apiKey: String, targetLanguage: String): LiveConnection =
         openInternal(apiKey, targetLanguage, CancellationSignal())
@@ -195,6 +204,8 @@ class GeminiWebSocketTransport(
         else -> ProtocolFailure.Network
     }
 
+    private companion object { const val PROBE_URL = "https://generativelanguage.googleapis.com/" }
+
     private fun endpoint(apiKey: String): String =
         "wss://generativelanguage.googleapis.com/ws/google.ai.generativelanguage.v1beta.GenerativeService.BidiGenerateContent?key=$apiKey"
 }
@@ -227,6 +238,9 @@ internal class SocketLiveConnection(
             else -> throw ProtocolFailure.Protocol
         }
     }
+
+    // Messages are JSON with base64 PCM16 mono 16 kHz: audio bytes ~ queued bytes * 3/4 (JSON overhead ignored), 32000 bytes per second.
+    override fun pendingSendSeconds(): Double = socket.queueSize() * 0.75 / 32_000.0
 
     override fun cancel() {
         socket.cancel()
