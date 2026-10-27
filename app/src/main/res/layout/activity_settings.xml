@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android" android:layout_width="match_parent" android:layout_height="match_parent" android:background="@color/background">
+    <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical" android:padding="@dimen/page_padding">
+        <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:text="@string/settings" android:textColor="@color/text" android:textSize="28sp" android:textStyle="bold" />
+        <EditText android:id="@+id/apiKeyInput" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="20dp" android:hint="@string/api_key" android:inputType="textPassword" android:textColor="@color/text" android:textColorHint="@color/muted" />
+        <Button android:id="@+id/toggleKeyButton" android:layout_width="match_parent" android:layout_height="48dp" android:layout_marginTop="8dp" android:background="@drawable/button_background" android:contentDescription="Показати або сховати ключ" android:text="Показати ключ" android:textColor="@color/text" />
+        <Button android:id="@+id/removeKeyButton" android:layout_width="match_parent" android:layout_height="48dp" android:layout_marginTop="8dp" android:background="@drawable/button_background" android:text="Видалити ключ" android:textColor="@color/text" />
+        <Button android:id="@+id/checkButton" android:layout_width="match_parent" android:layout_height="52dp" android:layout_marginTop="18dp" android:background="@drawable/primary_button_background" android:text="@string/check_connection" android:textColor="@color/background" android:textStyle="bold" />
+        <TextView android:id="@+id/settingsStatus" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="12dp" android:textColor="@color/muted" android:textSize="13sp" />
+        <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="22dp" android:text="@string/key_plaintext_warning" android:textColor="@color/muted" android:textSize="12sp" />
+        <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="8dp" android:text="@string/free_tier_note" android:textColor="@color/muted" android:textSize="12sp" />
+    </LinearLayout>
+</ScrollView>

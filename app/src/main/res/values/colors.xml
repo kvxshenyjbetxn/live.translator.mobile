@@ -1,0 +1,13 @@
+<resources>
+    <color name="background">#191C1D</color>
+    <color name="sidebar">#151A18</color>
+    <color name="surface">#1D2320</color>
+    <color name="input">#222926</color>
+    <color name="button">#252D28</color>
+    <color name="hover">#333F31</color>
+    <color name="text">#EDF1EB</color>
+    <color name="muted">#929D96</color>
+    <color name="line">#303936</color>
+    <color name="accent">#C5E89D</color>
+    <color name="panel">#212725</color>
+</resources>

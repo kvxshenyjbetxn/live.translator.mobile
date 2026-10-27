@@ -1,0 +1,18 @@
+<resources>
+    <string name="app_name">Live Translator</string>
+    <string name="source_title">ДЖЕРЕЛО ЗВУКУ</string>
+    <string name="translation_title">ЖИВИЙ ПЕРЕКЛАД</string>
+    <string name="listen_title">Слухай своєю мовою</string>
+    <string name="start_translation">Почати переклад</string>
+    <string name="stop_translation">Зупинити переклад</string>
+    <string name="settings">Налаштування</string>
+    <string name="check_connection">Перевірити з’єднання</string>
+    <string name="refresh">Оновити список програм</string>
+    <string name="google_disclosure">Аудіо вибраної програми після Start передається Google для живого перекладу.</string>
+    <string name="privacy_note">Аудіо зберігається лише в пам’яті. Окреме регулювання оригінальної гучності не підтримується.</string>
+    <string name="no_source">Виберіть програму-джерело</string>
+    <string name="api_key">API-ключ Gemini</string>
+    <string name="key_plaintext_warning">Ключ зберігається у відкритому вигляді лише у приватних даних цього застосунку. Не передавайте його.</string>
+    <string name="free_tier_note">Безкоштовний рівень і обробка даних Google можуть мати обмеження. Цей застосунок не вмикає оплату та не гарантує квоту.</string>
+    <string name="saved">Збережено</string>
+</resources>
