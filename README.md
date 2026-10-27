@@ -1,6 +1,6 @@
 # Live Translator Mobile
 
-Native Kotlin Android MVP (`0.1.0`) for translating audio from one selected, launcher-visible application into Ukrainian.
+Native Kotlin Android MVP (`0.1.2`) for translating audio from one selected, launcher-visible application into Ukrainian.
 
 ## Use
 
@@ -32,3 +32,9 @@ JAVA_HOME=/Library/Java/JavaVirtualMachines/temurin-21.jdk/Contents/Home \\
 ```
 
 The debug APK is produced at `app/build/outputs/apk/debug/app-debug.apk`. Device, Google service and target-application compatibility remain pending authorized validation; this repository does not claim real-device success.
+
+## Release signing
+
+Release builds require `.signing/release.properties` with `storeFile` (relative to the project root), `storePassword`, `keyAlias`, and `keyPassword`. Use a privately generated release keystore; never commit or share the properties, passwords, or keystore. The entire `.signing/` directory is ignored. Back up the keystore and credentials securely outside this working copy: losing them prevents signing updates with the same identity. Do not overwrite an existing keystore or its backups.
+
+With the signing files in place, build using `gradle --offline --no-daemon :app:assembleRelease`. Without valid signing configuration, release assembly fails; debug builds and checks do not require it. Configuration backups made for this change are in the ignored `.signing/config-backups/` directory and are not a substitute for a secure signing-key backup.
