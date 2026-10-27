@@ -84,7 +84,7 @@ class SettingsRepository(
 
     private fun parse(text: String): AppSettings {
         val json = org.json.JSONObject(text)
-        val allowed = setOf("schemaVersion", "apiKey", "selectedPackage", "selectedLabel", "targetLanguage", "pinnedPackages", "recentPackages")
+        val allowed = setOf("schemaVersion", "apiKey", "selectedPackage", "selectedLabel", "targetLanguage", "pinnedPackages", "recentPackages", "translationBoostDb")
         json.keys().asSequence().forEach { if (it !in allowed) throw SettingsValidationError.UnsupportedSchema }
         val settings = AppSettings(
             schemaVersion = json.getInt("schemaVersion"),
@@ -94,6 +94,7 @@ class SettingsRepository(
             targetLanguage = json.getString("targetLanguage"),
             pinnedPackages = readList(json, "pinnedPackages"),
             recentPackages = readList(json, "recentPackages"),
+            translationBoostDb = json.optInt("translationBoostDb", AppSettings.DEFAULT_TRANSLATION_BOOST_DB),
         )
         return SettingsValidator.validate(settings)
     }
@@ -111,6 +112,7 @@ class SettingsRepository(
         .put("targetLanguage", settings.targetLanguage)
         .put("pinnedPackages", org.json.JSONArray(settings.pinnedPackages))
         .put("recentPackages", org.json.JSONArray(settings.recentPackages))
+        .put("translationBoostDb", settings.translationBoostDb)
         .toString()
 
     companion object {

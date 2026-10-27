@@ -32,6 +32,13 @@ class SettingsValidatorTest {
         }
     }
 
+    @Test fun rejectsOutOfRangeBoost() {
+        listOf(-1, 21, 100).forEach {
+            assertFailsWith<SettingsValidationError.InvalidBoost> { SettingsValidator.validate(AppSettings(translationBoostDb = it)) }
+        }
+        listOf(0, 6, 20).forEach { assertEquals(it, SettingsValidator.validate(AppSettings(translationBoostDb = it)).translationBoostDb) }
+    }
+
     @Test fun acceptsEmptyAndValidSettings() {
         val settings = AppSettings(apiKey = "AIza-test_only-123", selectedPackage = "com.example.player")
         assertSame(settings, SettingsValidator.validate(settings))

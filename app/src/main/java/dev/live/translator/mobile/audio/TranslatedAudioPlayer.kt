@@ -3,6 +3,7 @@ package dev.live.translator.mobile.audio
 import android.media.AudioAttributes
 import android.media.AudioFormat
 import android.media.AudioTrack
+import android.media.audiofx.LoudnessEnhancer
 import java.util.concurrent.ArrayBlockingQueue
 import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicInteger
@@ -20,6 +21,8 @@ class TranslatedAudioPlayer(private val queueCapacity: Int = 8) : TranslationPla
     private val queue = ArrayBlockingQueue<ShortArray>(queueCapacity)
     private val running = AtomicBoolean(false)
     @Volatile private var track: AudioTrack? = null
+    @Volatile private var enhancer: LoudnessEnhancer? = null
+    private val boostListener: (Int) -> Unit = { applyBoost(it) }
     private val queuedSamples = AtomicInteger()
     @Volatile private var writtenFrames = 0L
     private var thread: Thread? = null
@@ -51,6 +54,9 @@ class TranslatedAudioPlayer(private val queueCapacity: Int = 8) : TranslationPla
                 throw PlaybackFormatException("AudioTrack не ініціалізовано")
             }
             track = created
+            enhancer = try { LoudnessEnhancer(created.audioSessionId) } catch (_: RuntimeException) { null }
+            applyBoost(TranslationVolume.boostDb)
+            TranslationVolume.addListener(boostListener)
             created.play()
             thread = Thread({ playbackLoop(created, onFailure) }, "live-translator-playback").also { it.start() }
         } catch (error: Exception) {
@@ -95,12 +101,24 @@ class TranslatedAudioPlayer(private val queueCapacity: Int = 8) : TranslationPla
         }
     }
 
+    private fun applyBoost(db: Int) {
+        try {
+            enhancer?.apply {
+                setTargetGain(db * 100)
+                enabled = db > 0
+            }
+        } catch (_: RuntimeException) { }
+    }
+
     override fun stopAndRelease() {
         if (!running.getAndSet(false) && track == null) return
         queue.clear()
         queuedSamples.set(0)
         thread?.interrupt()
         thread = null
+        TranslationVolume.removeListener(boostListener)
+        enhancer?.let { try { it.release() } catch (_: RuntimeException) { } }
+        enhancer = null
         track?.let {
             try { it.pause() } catch (_: IllegalStateException) { }
             it.flush()

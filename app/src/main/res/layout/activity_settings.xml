@@ -9,5 +9,8 @@
         <TextView android:id="@+id/settingsStatus" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="12dp" android:textColor="@color/muted" android:textSize="13sp" />
         <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="22dp" android:text="@string/key_plaintext_warning" android:textColor="@color/muted" android:textSize="12sp" />
         <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="8dp" android:text="@string/free_tier_note" android:textColor="@color/muted" android:textSize="12sp" />
+        <TextView android:id="@+id/boostLabel" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="28dp" android:textColor="@color/text" android:textSize="16sp" />
+        <SeekBar android:id="@+id/boostSeekBar" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="8dp" android:minHeight="48dp" android:max="20" />
+        <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="4dp" android:text="@string/boost_hint" android:textColor="@color/muted" android:textSize="12sp" />
     </LinearLayout>
 </ScrollView>

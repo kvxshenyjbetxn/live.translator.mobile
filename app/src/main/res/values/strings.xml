@@ -14,6 +14,9 @@
     <string name="api_key">API-ключ Gemini</string>
     <string name="key_plaintext_warning">Ключ зберігається у відкритому вигляді лише у приватних даних цього застосунку. Не передавайте його.</string>
     <string name="free_tier_note">Безкоштовний рівень і обробка даних Google можуть мати обмеження. Цей застосунок не вмикає оплату та не гарантує квоту.</string>
+    <string name="boost_label">Підсилення перекладу: +%1$d dB</string>
+    <string name="boost_off">Підсилення перекладу: вимкнено</string>
+    <string name="boost_hint">Робить переклад гучнішим за оригінал. На високих значеннях звук може спотворюватися.</string>
     <string name="saved">Збережено</string>
     <string name="language_title">МОВА ПЕРЕКЛАДУ</string>
     <string name="diag_title">Діагностика затримки</string>

@@ -26,6 +26,7 @@ import android.widget.ImageButton
 import android.widget.EditText
 import android.widget.ListView
 import android.widget.TextView
+import dev.live.translator.mobile.audio.TranslationVolume
 import dev.live.translator.mobile.model.AppSettings
 import dev.live.translator.mobile.diagnostics.DiagnosticTexts
 import dev.live.translator.mobile.diagnostics.DiagnosticsPresentation
@@ -141,6 +142,7 @@ class MainActivity : Activity() {
     private fun reloadSettings() {
         Thread {
             val loaded = try { runSuspend { settingsRepository.load() } } catch (_: Exception) { settings }
+            TranslationVolume.boostDb = loaded.translationBoostDb
             runOnUiThread {
                 settings = loaded
                 refreshTargets()
@@ -354,6 +356,7 @@ class MainActivity : Activity() {
             return
         }
         settings = latestSettings
+        TranslationVolume.boostDb = latestSettings.translationBoostDb
         val intent = Intent(this, TranslationForegroundService::class.java)
             .putExtra(TranslationForegroundService.EXTRA_RESULT_CODE, resultCode)
             .putExtra(TranslationForegroundService.EXTRA_PROJECTION_DATA, data)

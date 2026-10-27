@@ -9,6 +9,7 @@ sealed class SettingsValidationError : Exception() {
     data object InvalidPackage : SettingsValidationError()
     data object InvalidLabel : SettingsValidationError()
     data object UnsupportedLanguage : SettingsValidationError()
+    data object InvalidBoost : SettingsValidationError()
 }
 
 object SettingsValidator {
@@ -39,6 +40,7 @@ object SettingsValidator {
             throw SettingsValidationError.InvalidLabel
         }
         if (!Languages.isSupported(settings.targetLanguage)) throw SettingsValidationError.UnsupportedLanguage
+        if (settings.translationBoostDb !in 0..AppSettings.MAX_TRANSLATION_BOOST_DB) throw SettingsValidationError.InvalidBoost
         val pinned = cleanPackages(settings.pinnedPackages, MAX_PINNED)
         val recent = cleanPackages(settings.recentPackages, MAX_RECENT)
         return if (pinned == settings.pinnedPackages && recent == settings.recentPackages) settings

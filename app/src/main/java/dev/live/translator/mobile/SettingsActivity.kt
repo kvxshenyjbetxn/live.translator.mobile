@@ -7,7 +7,9 @@ import android.text.InputType
 import android.text.TextWatcher
 import android.widget.Button
 import android.widget.EditText
+import android.widget.SeekBar
 import android.widget.TextView
+import dev.live.translator.mobile.audio.TranslationVolume
 import dev.live.translator.mobile.gemini.GeminiWebSocketTransport
 import dev.live.translator.mobile.model.AppSettings
 import dev.live.translator.mobile.settings.SaveResult
@@ -23,6 +25,8 @@ class SettingsActivity : Activity() {
     private lateinit var autosave: SettingsAutosaveController
     private lateinit var keyInput: EditText
     private lateinit var status: TextView
+    private lateinit var boostLabel: TextView
+    private lateinit var boostSeekBar: SeekBar
     private var visible = false
     private var settings = AppSettings()
     private var suppressChanges = true
@@ -42,6 +46,21 @@ class SettingsActivity : Activity() {
         keyInput = findViewById(R.id.apiKeyInput)
         keyInput.isEnabled = false
         status = findViewById(R.id.settingsStatus)
+        boostLabel = findViewById(R.id.boostLabel)
+        boostSeekBar = findViewById(R.id.boostSeekBar)
+        boostSeekBar.max = AppSettings.MAX_TRANSLATION_BOOST_DB
+        boostSeekBar.isEnabled = false
+        updateBoostLabel(TranslationVolume.boostDb)
+        boostSeekBar.progress = TranslationVolume.boostDb
+        boostSeekBar.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
+            override fun onProgressChanged(seekBar: SeekBar?, progress: Int, fromUser: Boolean) {
+                if (!fromUser) return
+                updateBoostLabel(progress)
+                TranslationVolume.boostDb = progress
+            }
+            override fun onStartTrackingTouch(seekBar: SeekBar?) = Unit
+            override fun onStopTrackingTouch(seekBar: SeekBar?) { seekBar?.let { saveBoost(it.progress) } }
+        })
         findViewById<Button>(R.id.toggleKeyButton).setOnClickListener { toggleVisibility() }
         findViewById<Button>(R.id.removeKeyButton).setOnClickListener { keyInput.setText("") }
         findViewById<Button>(R.id.checkButton).setOnClickListener { checkConnection() }
@@ -66,6 +85,10 @@ class SettingsActivity : Activity() {
                     keyInput.setText(loaded.apiKey)
                     suppressChanges = false
                     keyInput.isEnabled = true
+                    boostSeekBar.progress = loaded.translationBoostDb
+                    updateBoostLabel(loaded.translationBoostDb)
+                    TranslationVolume.boostDb = loaded.translationBoostDb
+                    boostSeekBar.isEnabled = true
                     status.text = getString(R.string.saved)
                 }
             }
@@ -80,6 +103,19 @@ class SettingsActivity : Activity() {
     override fun onDestroy() {
         autosave.close()
         super.onDestroy()
+    }
+
+    private fun updateBoostLabel(db: Int) {
+        boostLabel.text = if (db > 0) getString(R.string.boost_label, db) else getString(R.string.boost_off)
+    }
+
+    private fun saveBoost(value: Int) {
+        Thread {
+            val result = try { runSuspend { repository.update { it.copy(translationBoostDb = value) } } } catch (_: Exception) { null }
+            runOnUiThread {
+                status.text = if (result is SaveResult.Saved) getString(R.string.saved) else "Не вдалося зберегти налаштування."
+            }
+        }.start()
     }
 
     private fun toggleVisibility() {

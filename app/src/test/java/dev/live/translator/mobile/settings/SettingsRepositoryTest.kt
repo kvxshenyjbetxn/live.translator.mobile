@@ -70,6 +70,18 @@ class SettingsRepositoryTest {
         assertEquals(listOf("com.c"), loaded.recentPackages)
     }
 
+    @Test fun roundTripsTranslationBoost() {
+        val directory = Files.createTempDirectory("mobile-settings-boost").toFile()
+        runSuspend { SettingsRepository(directory).update { it.copy(translationBoostDb = 9) } }
+        assertEquals(9, runSuspend { SettingsRepository(directory).load() }.translationBoostDb)
+    }
+
+    @Test fun legacyFileWithoutBoostLoadsDefault() {
+        val directory = Files.createTempDirectory("mobile-settings-noboost").toFile()
+        java.io.File(directory, "settings.json").writeText("""{"schemaVersion":1,"apiKey":"","selectedPackage":null,"selectedLabel":null,"targetLanguage":"uk"}""")
+        assertEquals(6, runSuspend { SettingsRepository(directory).load() }.translationBoostDb)
+    }
+
     @Test fun roundTripsTargetLanguage() {
         val directory = Files.createTempDirectory("mobile-settings-lang").toFile()
         listOf("en", "pl", "de", "uk").forEach { code ->
