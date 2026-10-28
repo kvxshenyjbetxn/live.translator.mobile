@@ -224,7 +224,7 @@ class MainActivity : Activity() {
         dialog.window?.setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
         dialog.show()
         val metrics = resources.displayMetrics
-        dialog.window?.setLayout(metrics.widthPixels - 2 * (16 * density).toInt(), WindowManager.LayoutParams.WRAP_CONTENT)
+        dialog.window?.setLayout(metrics.widthPixels - 2 * (16 * density).toInt(), (metrics.heightPixels * 0.8f).toInt())
     }
 
     private fun selectLanguage(language: Language) {

@@ -86,10 +86,18 @@ class SettingsRepositoryTest {
 
     @Test fun roundTripsTargetLanguage() {
         val directory = Files.createTempDirectory("mobile-settings-lang").toFile()
-        listOf("en", "pl", "de", "uk").forEach { code ->
+        listOf("en", "pl", "de", "uk", "zh-Hans", "zh-Hant", "pt-BR", "pt-PT", "no").forEach { code ->
             runSuspend { SettingsRepository(directory).update { it.copy(targetLanguage = code) } }
             assertEquals(code, runSuspend { SettingsRepository(directory).load() }.targetLanguage)
         }
+    }
+
+    @Test fun norwegianAliasIsNormalizedOnSaveAndLoad() {
+        val directory = Files.createTempDirectory("mobile-settings-norwegian").toFile()
+        assertEquals(SaveResult.Saved, runSuspend { SettingsRepository(directory).update { it.copy(targetLanguage = "nb") } })
+        assertEquals("no", runSuspend { SettingsRepository(directory).load() }.targetLanguage)
+        java.io.File(directory, "settings.json").writeText("""{"schemaVersion":1,"apiKey":"","selectedPackage":null,"selectedLabel":null,"targetLanguage":"nb"}""")
+        assertEquals("no", runSuspend { SettingsRepository(directory).load() }.targetLanguage)
     }
 
     @Test fun roundTripsAppearance() {

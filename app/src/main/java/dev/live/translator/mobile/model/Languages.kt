@@ -3,8 +3,93 @@ package dev.live.translator.mobile.model
 data class Language(val code: String, val name: String)
 
 object Languages {
-    val all = listOf(Language("uk", "Українська"), Language("en", "English"), Language("pl", "Polski"), Language("de", "Deutsch"))
-    fun isSupported(code: String?): Boolean = all.any { it.code == code }
-    fun normalize(code: String?): String = if (isSupported(code)) code!! else AppSettings.TARGET_LANGUAGE
+    // https://ai.google.dev/gemini-api/docs/live-api/live-translate#supported-languages
+    val all = listOf(
+        Language("uk", "Українська"),
+        Language("af", "Afrikaans"),
+        Language("ak", "Akan"),
+        Language("sq", "Shqip"),
+        Language("am", "አማርኛ"),
+        Language("ar", "العربية"),
+        Language("hy", "Հայերեն"),
+        Language("az", "Azərbaycanca"),
+        Language("eu", "Euskara"),
+        Language("be", "Беларуская"),
+        Language("bn", "বাংলা"),
+        Language("bg", "Български"),
+        Language("my", "မြန်မာဘာသာ"),
+        Language("ca", "Català"),
+        Language("zh-Hans", "简体中文"),
+        Language("zh-Hant", "繁體中文"),
+        Language("hr", "Hrvatski"),
+        Language("cs", "Čeština"),
+        Language("da", "Dansk"),
+        Language("nl", "Nederlands"),
+        Language("en", "English"),
+        Language("et", "Eesti"),
+        Language("fil", "Filipino"),
+        Language("fi", "Suomi"),
+        Language("fr", "Français"),
+        Language("gl", "Galego"),
+        Language("ka", "ქართული"),
+        Language("de", "Deutsch"),
+        Language("el", "Ελληνικά"),
+        Language("gu", "ગુજરાતી"),
+        Language("ha", "Hausa"),
+        Language("he", "עברית"),
+        Language("hi", "हिन्दी"),
+        Language("hu", "Magyar"),
+        Language("is", "Íslenska"),
+        Language("id", "Bahasa Indonesia"),
+        Language("it", "Italiano"),
+        Language("ja", "日本語"),
+        Language("jv", "Basa Jawa"),
+        Language("kn", "ಕನ್ನಡ"),
+        Language("kk", "Қазақша"),
+        Language("km", "ខ្មែរ"),
+        Language("rw", "Kinyarwanda"),
+        Language("ko", "한국어"),
+        Language("lo", "ລາວ"),
+        Language("lv", "Latviešu"),
+        Language("lt", "Lietuvių"),
+        Language("mk", "Македонски"),
+        Language("ms", "Bahasa Melayu"),
+        Language("ml", "മലയാളം"),
+        Language("mr", "मराठी"),
+        Language("mn", "Монгол"),
+        Language("ne", "नेपाली"),
+        Language("no", "Norsk"),
+        Language("fa", "فارسی"),
+        Language("pl", "Polski"),
+        Language("pt-BR", "Português (Brasil)"),
+        Language("pt-PT", "Português (Portugal)"),
+        Language("pa", "ਪੰਜਾਬੀ"),
+        Language("ro", "Română"),
+        Language("ru", "Русский"),
+        Language("sr", "Српски"),
+        Language("sd", "سنڌي"),
+        Language("si", "සිංහල"),
+        Language("sk", "Slovenčina"),
+        Language("sl", "Slovenščina"),
+        Language("es", "Español"),
+        Language("su", "Basa Sunda"),
+        Language("sw", "Kiswahili"),
+        Language("sv", "Svenska"),
+        Language("ta", "தமிழ்"),
+        Language("te", "తెలుగు"),
+        Language("th", "ไทย"),
+        Language("tr", "Türkçe"),
+        Language("ur", "اردو"),
+        Language("uz", "Oʻzbekcha"),
+        Language("vi", "Tiếng Việt"),
+        Language("zu", "isiZulu"),
+    )
+
+    fun isSupported(code: String?): Boolean = code == "nb" || all.any { it.code == code }
+    fun normalize(code: String?): String = when {
+        code == "nb" -> "no"
+        isSupported(code) -> code!!
+        else -> AppSettings.TARGET_LANGUAGE
+    }
     fun nameOf(code: String?): String = all.first { it.code == normalize(code) }.name
 }

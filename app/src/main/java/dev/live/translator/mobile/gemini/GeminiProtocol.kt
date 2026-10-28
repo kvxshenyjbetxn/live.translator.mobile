@@ -42,7 +42,7 @@ object GeminiProtocol {
             .put("generationConfig", JSONObject()
                 .put("responseModalities", JSONArray().put("AUDIO"))
                 .put("translationConfig", JSONObject()
-                    .put("targetLanguageCode", targetLanguage)
+                    .put("targetLanguageCode", Languages.normalize(targetLanguage))
                     .put("echoTargetLanguage", false))))
             .toString()
     }

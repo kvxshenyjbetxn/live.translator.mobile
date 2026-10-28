@@ -1,6 +1,7 @@
 package dev.live.translator.mobile.settings
 
 import dev.live.translator.mobile.model.AppSettings
+import dev.live.translator.mobile.model.Languages
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
@@ -12,7 +13,7 @@ class SettingsValidatorTest {
             SettingsValidator.validate(AppSettings(schemaVersion = 2))
         }
         assertFailsWith<SettingsValidationError.UnsupportedLanguage> {
-            SettingsValidator.validate(AppSettings(targetLanguage = "fr"))
+            SettingsValidator.validate(AppSettings(targetLanguage = "xx"))
         }
         assertFailsWith<SettingsValidationError.UnsupportedLanguage> {
             SettingsValidator.validate(AppSettings(targetLanguage = ""))
@@ -20,7 +21,11 @@ class SettingsValidatorTest {
     }
 
     @Test fun acceptsAllSupportedLanguages() {
-        listOf("uk", "en", "pl", "de").forEach { assertEquals(it, SettingsValidator.validate(AppSettings(targetLanguage = it)).targetLanguage) }
+        Languages.all.map { it.code }.forEach { assertEquals(it, SettingsValidator.validate(AppSettings(targetLanguage = it)).targetLanguage) }
+    }
+
+    @Test fun normalizesNorwegianAlias() {
+        assertEquals("no", SettingsValidator.validate(AppSettings(targetLanguage = "nb")).targetLanguage)
     }
 
     @Test fun rejectsInvalidKeysAndPackages() {

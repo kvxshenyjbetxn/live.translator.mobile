@@ -41,9 +41,10 @@ object SettingsValidator {
         }
         if (!Languages.isSupported(settings.targetLanguage)) throw SettingsValidationError.UnsupportedLanguage
         if (settings.translationBoostDb !in 0..AppSettings.MAX_TRANSLATION_BOOST_DB) throw SettingsValidationError.InvalidBoost
+        val language = Languages.normalize(settings.targetLanguage)
         val pinned = cleanPackages(settings.pinnedPackages, MAX_PINNED)
         val recent = cleanPackages(settings.recentPackages, MAX_RECENT)
-        return if (pinned == settings.pinnedPackages && recent == settings.recentPackages) settings
-        else settings.copy(pinnedPackages = pinned, recentPackages = recent)
+        return if (language == settings.targetLanguage && pinned == settings.pinnedPackages && recent == settings.recentPackages) settings
+        else settings.copy(targetLanguage = language, pinnedPackages = pinned, recentPackages = recent)
     }
 }

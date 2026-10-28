@@ -1,6 +1,7 @@
 package dev.live.translator.mobile.gemini
 
 import java.util.Base64
+import dev.live.translator.mobile.model.Languages
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
@@ -20,11 +21,13 @@ class GeminiProtocolTest {
     }
 
     @Test fun setupAcceptsEverySupportedLanguageAndRejectsOthers() {
-        listOf("uk", "en", "pl", "de").forEach {
+        Languages.all.map { it.code }.forEach {
             val target = org.json.JSONObject(GeminiProtocol.setup(it)).getJSONObject("setup").getJSONObject("generationConfig").getJSONObject("translationConfig")
             assertEquals(it, target.getString("targetLanguageCode"))
         }
-        assertFailsWith<IllegalArgumentException> { GeminiProtocol.setup("fr") }
+        val alias = org.json.JSONObject(GeminiProtocol.setup("nb")).getJSONObject("setup").getJSONObject("generationConfig").getJSONObject("translationConfig")
+        assertEquals("no", alias.getString("targetLanguageCode"))
+        assertFailsWith<IllegalArgumentException> { GeminiProtocol.setup("xx") }
     }
 
     @Test fun rejectsWrongPacketLengths() {
